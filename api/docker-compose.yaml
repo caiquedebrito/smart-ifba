@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  spring-app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - artemis
+      - postgres
+    volumes:
+      - ./target/api-0.0.1-SNAPSHOT.jar:/app/api.jar
+    environment:
+      - SPRING_ARTEMIS_MODE=native
+      - SPRING_ARTEMIS_HOST=artemis
+      - SPRING_ARTEMIS_PORT=61616
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/api
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+
+  artemis:
+    image: vromero/activemq-artemis
+    ports:
+      - "8161:8161"   # Console web do Artemis
+      - "61616:61616" # Porta do broker
+      - "1883:1883"   # Porta MQTT
+    environment:
+      - ARTEMIS_USERNAME=admin
+      - ARTEMIS_PASSWORD=admin
+
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
